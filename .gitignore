@@ -1,2 +1,5 @@
 .venv/
 .env
+node_modules/
+lib/
+bin/
