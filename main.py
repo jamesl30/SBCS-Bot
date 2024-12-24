@@ -10,6 +10,23 @@ from bs4 import BeautifulSoup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from dotenv import load_dotenv
+import subprocess
+
+def get_pid_by_port(port):
+    # Run the `lsof` command to find the PID of the process using the port
+    try:
+        # Run the command `lsof -i :8000` to get the PID for the specific port
+        result = subprocess.run(['lsof', '-t', '-i', f':{port}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pid = result.stdout.decode('utf-8').strip()
+        
+        if pid:
+            return int(pid)
+        else:
+            print(f"No process found on port {port}.")
+            return None
+    except Exception as e:
+        print(f"Error finding PID: {e}")
+        return None
 
 load_dotenv()
 
@@ -38,7 +55,12 @@ async def daily(ctx):
             with open("day.txt", 'w') as destination_file:
                 destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
     try:
+
         # Fetch the daily problem from the Express server
+        pid = get_pid_by_port(EXPRESS_SERVER_URL)
+        if pid:
+            os.kill(pid, signal.SIGTERM)
+            await subprocess.run(['node', 'daily_leetcode.js'], capture_output=True, text=True)
         response = requests.get(EXPRESS_SERVER_URL)
         
         # Check if the request was successful
@@ -46,8 +68,8 @@ async def daily(ctx):
             daily_problem = response.json()
 
             # Prepare the problem message
-            #message = str(datetime.today().strftime('%m-%d')) + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}\n\nStatement: {daily_problem['question']['content']}"
-            message = f"Statement: {daily_problem['question']['content']}"
+            message = str(datetime.today().strftime('%m-%d')) + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}\n\nStatement: {daily_problem['question']['content']}"
+            #message = f"Statement: {daily_problem['question']['content']}"
             message = message.replace('<strong>', '**')
             message = message.replace('</strong>', '**')
             message = message.replace('<code>', '`')
@@ -72,11 +94,14 @@ async def daily(ctx):
             message = message.replace(' ]', ']')
             message = message.replace(' [', '[')
             print(message)
-            #message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#884991300296925214>\n\nNote: You can discuss about the Question in the following thread: <#1169709010958688376>"
-            msg = await bot.get_channel(channel).send("Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for "
+            message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#884991300296925214>\n\nNote: You can discuss about the Question in the following thread: <#1169709010958688376>"
+            msg = await bot.get_channel(channel).send(message)
+            '''
+                "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for "
                 + str(datetime.now(timezone.utc).strftime('%m-%d'))
                 + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}",
                 embed=Embed(title=f"{daily_problem['question']['title']}", description = message))
+            '''
             msg.publish()
             return
         else:
