@@ -6,6 +6,9 @@ from discord import Embed
 import asyncio
 from datetime import datetime, timedelta, timezone
 from bs4 import BeautifulSoup
+import schedule
+import pytz
+import time
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -112,10 +115,25 @@ async def daily(ctx):
         message = f"An error occurred while fetching the daily problem: {str(e)}"
         print(message)
     msg = await bot.get_channel(channel).send(message)
+async def send_scheduled_message():
+    await daily(await bot.get_channel(home).send(f'{bot.user} is sending new problem!'))
+
+# Function to check the time and send the message at a specific time
+async def schedule_message():
+    while True:
+        now = datetime.now()
+        target_time = now.replace(hour=19, minute=0, second=5, microsecond=0)
+        if now > target_time:
+            target_time = target_time.replace(day=now.day + 1)
+        sleep_duration = (target_time - now).total_seconds()
+        print(f"Sending next daily problem in {sleep_duration} seconds...")
+        time.sleep(sleep_duration)  # Sleep until the target time
+        await send_scheduled_message()  # Run the job after the sleep
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await daily(await bot.get_channel(home).send(f'{bot.user} has connected to Discord!'))
+    await schedule_message()
 
 bot.run(TOKEN)
