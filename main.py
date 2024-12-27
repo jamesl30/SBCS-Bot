@@ -35,6 +35,7 @@ load_dotenv()
 
 TOKEN = os.getenv("token")
 
+main = 827652217901154375
 channel = 1072138841969938482
 home = 1072138841969938482
 
@@ -71,7 +72,7 @@ async def daily(ctx):
             daily_problem = response.json()
 
             # Prepare the problem message
-            message = str(datetime.today().strftime('%m-%d')) + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}\n\nStatement: {daily_problem['question']['content']}"
+            message = str(datetime.now(timezone.utc).strftime('%m-%d')) + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}\n\nStatement: {daily_problem['question']['content']}"
             #message = f"Statement: {daily_problem['question']['content']}"
             message = message.replace('<strong>', '**')
             message = message.replace('</strong>', '**')
@@ -98,6 +99,7 @@ async def daily(ctx):
             message = message.replace(' [', '[')
             print(message)
             message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#884991300296925214>\n\nNote: You can discuss about the Question in the following thread: <#1169709010958688376>"
+            message = message.replace('\n\n\n\n', '\n\n')
             msg = await bot.get_channel(channel).send(message)
             '''
                 "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for "
