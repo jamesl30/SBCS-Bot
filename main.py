@@ -16,9 +16,7 @@ from dotenv import load_dotenv
 import subprocess
 
 def get_pid_by_port(port):
-    # Run the `lsof` command to find the PID of the process using the port
     try:
-        # Run the command `lsof -i :8000` to get the PID for the specific port
         result = subprocess.run(['lsof', '-t', '-i', f':{port}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         pid = result.stdout.decode('utf-8').strip()
         
@@ -36,8 +34,9 @@ load_dotenv()
 TOKEN = os.getenv("token")
 
 main = 827652217901154375
-channel = 1072138841969938482
+channel = 827652217901154375
 home = 1072138841969938482
+#channel = home
 
 #intents setup
 intents = discord.Intents.default()
@@ -59,12 +58,14 @@ async def daily(ctx):
             with open("day.txt", 'w') as destination_file:
                 destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
     try:
+        pid_list = subprocess.check_output(command, shell=True).decode().splitlines()
+        if pid_list:
+            # Kill each process by PID
+            for pid in pid_list:
+                kill_command = f"kill -9 {pid}"
+                subprocess.run(kill_command, shell=True)
+                print(f"Terminated process with PID: {pid}")
 
-        # Fetch the daily problem from the Express server
-        pid = get_pid_by_port(EXPRESS_SERVER_URL)
-        if pid:
-            os.kill(pid, signal.SIGTERM)
-            await subprocess.run(['node', 'daily_leetcode.js'], capture_output=True, text=True)
         response = requests.get(EXPRESS_SERVER_URL)
         
         # Check if the request was successful
