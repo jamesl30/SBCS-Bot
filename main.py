@@ -58,6 +58,7 @@ async def daily(ctx):
             with open("day.txt", 'w') as destination_file:
                 destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
     try:
+        command = "ps aux"
         pid_list = subprocess.check_output(command, shell=True).decode().splitlines()
         if pid_list:
             # Kill each process by PID
