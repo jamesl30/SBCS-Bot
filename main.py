@@ -36,7 +36,7 @@ TOKEN = os.getenv("token")
 main = 827652217901154375
 channel = 827652217901154375
 home = 1072138841969938482
-#channel = home
+channel = home
 
 #intents setup
 intents = discord.Intents.default()
@@ -58,7 +58,7 @@ async def daily(ctx):
             with open("day.txt", 'w') as destination_file:
                 destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
     try:
-        command = "ps aux"
+        command = "lsof -t -i:8000"
         pid_list = subprocess.check_output(command, shell=True).decode().splitlines()
         if pid_list:
             # Kill each process by PID
@@ -67,8 +67,18 @@ async def daily(ctx):
                 subprocess.run(kill_command, shell=True)
                 print(f"Terminated process with PID: {pid}")
 
+        process = subprocess.Popen(['node', 'daily_leetcode.js'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        time.sleep(10)
+        print("Starting server...")
         response = requests.get(EXPRESS_SERVER_URL)
         
+        print("Got response")
+        while response.status_code != 200:
+            print("Waiting 10 seconds to start up server again")
+            time.sleep(10)
+            response = requests.get(EXPRESS_SERVER_URL)
+
         # Check if the request was successful
         if response.status_code == 200:
             daily_problem = response.json()
