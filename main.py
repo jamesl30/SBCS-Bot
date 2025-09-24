@@ -14,6 +14,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from dotenv import load_dotenv
 import subprocess
+from bs4 import BeautifulSoup
+import requests
+import random
 
 def get_pid_by_port(port):
     try:
@@ -36,14 +39,13 @@ TOKEN = os.getenv("token")
 main = 827652217901154375
 channel = 827652217901154375
 home = 1072138841969938482
-channel = home
+#channel = home
 
 #intents setup
 intents = discord.Intents.default()
 intents.message_content = True  # Enable reading message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-client = discord.Client(intents=intents)
 # URL for the Express server where the daily problem is exposed
 EXPRESS_SERVER_URL = 'http://localhost:8000'
 
@@ -57,20 +59,24 @@ async def daily(ctx):
         else:
             with open("day.txt", 'w') as destination_file:
                 destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
+    print("brah")
     try:
+        '''
         command = "lsof -t -i:8000"
         pid_list = subprocess.check_output(command, shell=True).decode().splitlines()
+        print(pid_list)
         if pid_list:
             # Kill each process by PID
             for pid in pid_list:
                 kill_command = f"kill -9 {pid}"
                 subprocess.run(kill_command, shell=True)
                 print(f"Terminated process with PID: {pid}")
+                '''
 
-        process = subprocess.Popen(['node', 'daily_leetcode.js'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #process = subprocess.Popen(['node', 'daily_leetcode.js'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        time.sleep(10)
-        print("Starting server...")
+        #time.sleep(10)
+        #print("Starting server...")
         response = requests.get(EXPRESS_SERVER_URL)
         
         print("Got response")
@@ -109,10 +115,11 @@ async def daily(ctx):
             message = message.replace(' :', ':')
             message = message.replace(' ]', ']')
             message = message.replace(' [', '[')
+            #TODO: implement <ul> and <li> tags 
             print(message)
             message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#884991300296925214>\n\nNote: You can discuss about the Question in the following thread: <#1169709010958688376>"
             message = message.replace('\n\n\n\n', '\n\n')
-            msg = await bot.get_channel(channel).send(message)
+            msg = await bot.get_channel(channel).send(message[:2000])
             '''
                 "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for "
                 + str(datetime.now(timezone.utc).strftime('%m-%d'))
@@ -120,6 +127,9 @@ async def daily(ctx):
                 embed=Embed(title=f"{daily_problem['question']['title']}", description = message))
             '''
             msg.publish()
+            if len(message) > 2000:
+                msg = await bot.get_channel(channel).send(message[2000:])
+                msg.publish()
             return
         else:
             message = "Sorry, I couldn't fetch the daily problem at the moment."        
@@ -149,5 +159,4 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     await daily(await bot.get_channel(home).send(f'{bot.user} has connected to Discord!'))
     await schedule_message()
-
 bot.run(TOKEN)

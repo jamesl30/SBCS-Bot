@@ -1,0 +1,55 @@
+name: Daily LeetCode Bot
+
+on:
+  schedule:
+    # Runs daily at 9:00 AM ET (13:00 UTC during standard time, 14:00 UTC during daylight time)
+    # Using 14:00 UTC to account for daylight saving time
+    - cron: '0 14 * * *'
+  workflow_dispatch: # Allows manual triggering for testing
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install discord.py requests beautifulsoup4 python-dotenv APScheduler pytz
+
+    - name: Create environment file
+      run: |
+        echo "token=${{ secrets.DISCORD_BOT_TOKEN }}" > .env
+
+    - name: Start Express server in background
+      run: |
+        node daily_leetcode.js &
+        echo $! > server.pid
+        sleep 5  # Give server time to start
+
+    - name: Run Discord bot
+      run: python main.py
+      timeout-minutes: 5
+
+    - name: Stop Express server
+      run: |
+        if [ -f server.pid ]; then
+          kill $(cat server.pid) || true
+        fi
