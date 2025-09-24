@@ -160,3 +160,4 @@ async def on_ready():
     await daily(await bot.get_channel(home).send(f'{bot.user} has connected to Discord!'))
     await schedule_message()
 bot.run(TOKEN)
+
