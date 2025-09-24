@@ -41,42 +41,63 @@ def read_day_file():
         return ""
 
 async def fetch_and_post_daily_problem():
+    with open("day.txt", 'r') as source_file:
+        if source_file.readline() == str(datetime.now(timezone.utc).strftime('%m-%d')):
+            await bot.close()
+            return
+        else:
+            with open("day.txt", 'w') as destination_file:
+                destination_file.write(datetime.now(timezone.utc).strftime('%m-%d'))
+    print("Starting daily problem fetch")
     try:
         response = requests.get(EXPRESS_SERVER_URL)
+
+        print("Got response")
+        while response.status_code != 200:
+            print("Waiting 10 seconds to start up server again")
+            time.sleep(10)
+            response = requests.get(EXPRESS_SERVER_URL)
+
+        # Check if the request was successful
         if response.status_code == 200:
-            data = response.json()
+            daily_problem = response.json()
 
-            title = data.get('title', 'No title')
-            question_id = data.get('questionId', 'N/A')
-            difficulty = data.get('difficulty', 'Unknown')
-            content = data.get('content', 'No content available')
-            question_link = data.get('questionLink', '#')
+            # Prepare the problem message
+            message = str(datetime.now(timezone.utc).strftime('%m-%d')) + f": **{daily_problem['question']['title']}**.\n\nQuestion Difficulty: **{daily_problem['question']['difficulty']}**\n\nLink: https://www.leetcode.com{daily_problem['link']}\n\nStatement: {daily_problem['question']['content']}"
+            message = message.replace('<strong>', '**')
+            message = message.replace('</strong>', '**')
+            message = message.replace('<code>', '`')
+            message = message.replace('</code>', '`')
+            message = message.replace('<code>', '`')
+            message = message.replace('</code>', '`')
+            message = message[:message.rfind('<strong class="example">Example 1:')]
+            message.replace(r'\n', '\n')
+            soup = BeautifulSoup(message, "html.parser")
+            for data in soup(['script']):
+                data.decompose()
+            message = ""
+            for string in soup.stripped_strings:
+                if (string=='.'):
+                    message+=(string + '\n\n')
+                else:
+                    message+=(string+ " ")
+            message.strip()
+            message = message.replace(' ,', ',')
+            message = message.replace(' .', '.')
+            message = message.replace(' :', ':')
+            message = message.replace(' ]', ']')
+            message = message.replace(' [', '[')
+            print(message)
+            message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#760321299083034635>"
+            message = message.replace('\n\n\n\n', '\n\n')
+            msg = await bot.get_channel(channel).send(message[:2000])
+            msg.publish()
+            if len(message) > 2000:
+                msg = await bot.get_channel(channel).send(message[2000:])
+                msg.publish()
 
-            soup = BeautifulSoup(content, 'html.parser')
-            clean_content = soup.get_text()
-
-            embed = Embed(title=f"Daily LeetCode Problem: {title}", color=0x00ff00)
-            embed.add_field(name="Question ID", value=question_id, inline=True)
-            embed.add_field(name="Difficulty", value=difficulty, inline=True)
-            embed.add_field(name="Link", value=f"[Solve Problem]({question_link})", inline=False)
-
-            if len(clean_content) > 1024:
-                clean_content = clean_content[:1021] + "..."
-
-            embed.add_field(name="Problem Description", value=clean_content, inline=False)
-
-            channel_obj = bot.get_channel(channel)
-            if channel_obj:
-                await channel_obj.send(embed=embed)
-                print(f"Posted daily problem: {title}")
-
-                current_day = get_current_day()
-                update_day_file(current_day)
-
-                await bot.close()
-            else:
-                print("Channel not found")
-                await bot.close()
+            print(f"Posted daily problem: {daily_problem['question']['title']}")
+            await bot.close()
         else:
             print(f"Failed to fetch data from Express server. Status code: {response.status_code}")
             await bot.close()
