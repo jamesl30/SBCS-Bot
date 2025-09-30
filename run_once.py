@@ -88,14 +88,24 @@ async def fetch_and_post_daily_problem():
             message = message.replace(' ]', ']')
             message = message.replace(' [', '[')
             print(message)
-            message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#760321299083034635>"
-            message = message.replace('\n\n\n\n', '\n\n')
-            for ch in channel:
-                msg = await bot.get_channel(ch).send(message[:2000])
-                msg.publish()
-                if len(message) > 2000:
-                    msg = await bot.get_channel(ch).send(message[2000:])
+            full_message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#760321299083034635>"
+            full_message = full_message.replace('\n\n\n\n', '\n\n')
+            simple_message = "Good morning!\n\nThis is your coding interview problem for " + message + "\n\nHave a great day!"
+            simple_message = simple_message.replace('\n\n\n\n', '\n\n')
+
+            for i, ch in enumerate(channel):
+                if i == 1:  # channels[1] gets simple message
+                    msg = await bot.get_channel(ch).send(simple_message[:2000])
                     msg.publish()
+                    if len(simple_message) > 2000:
+                        msg = await bot.get_channel(ch).send(simple_message[2000:])
+                        msg.publish()
+                else:  # channels[0] gets full message
+                    msg = await bot.get_channel(ch).send(full_message[:2000])
+                    msg.publish()
+                    if len(full_message) > 2000:
+                        msg = await bot.get_channel(ch).send(full_message[2000:])
+                        msg.publish()
 
             print(f"Posted daily problem: {daily_problem['question']['title']}")
             await bot.close()
