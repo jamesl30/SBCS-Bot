@@ -15,7 +15,7 @@ load_dotenv()
 TOKEN = os.getenv("token")
 
 main = 827652217901154375
-channel = 827652217901154375
+channel = [827652217901154375,1422055167460638895]
 home = 1072138841969938482
 
 intents = discord.Intents.default()
@@ -90,11 +90,12 @@ async def fetch_and_post_daily_problem():
             print(message)
             message = "Good Morning <@&1172561226576965683>\n\nThis is your coding interview problem for " + message + "\n\nHave a great day! Reminder: You can get the Daily Programming role in the <#760321299083034635>"
             message = message.replace('\n\n\n\n', '\n\n')
-            msg = await bot.get_channel(channel).send(message[:2000])
-            msg.publish()
-            if len(message) > 2000:
-                msg = await bot.get_channel(channel).send(message[2000:])
+            for ch in channel:
+                msg = await bot.get_channel(ch).send(message[:2000])
                 msg.publish()
+                if len(message) > 2000:
+                    msg = await bot.get_channel(ch).send(message[2000:])
+                    msg.publish()
 
             print(f"Posted daily problem: {daily_problem['question']['title']}")
             await bot.close()
