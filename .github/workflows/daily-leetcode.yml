@@ -4,7 +4,7 @@ on:
   schedule:
     # Runs daily at 9:00 AM ET (13:00 UTC during standard time, 14:00 UTC during daylight time)
     # Using 14:00 UTC to account for daylight saving time
-    - cron: '0 13 * * *'
+    # - cron: '0 13 * * *'
   workflow_dispatch: # Allows manual triggering for testing
 
 jobs:
