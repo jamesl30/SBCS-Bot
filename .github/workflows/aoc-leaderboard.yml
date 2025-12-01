@@ -1,0 +1,33 @@
+name: AoC Leaderboard Bot
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  post-leaderboard:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Create environment file
+      run: |
+        echo "token=${{ secrets.DISCORD_BOT_TOKEN }}" > .env
+        echo "AOC_SESSION=${{ secrets.AOC_SESSION }}" >> .env
+        echo "AOC_LEADERBOARD_ID=4312390" >> .env
+        echo "AOC_YEAR=2025" >> .env
+
+    - name: Run AoC Leaderboard bot
+      run: python aoc_leaderboard.py
+      timeout-minutes: 2
