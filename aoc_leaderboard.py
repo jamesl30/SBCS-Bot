@@ -100,7 +100,7 @@ def format_leaderboard(data):
     embed.set_footer(text=f"Last updated: {timestamp}")
     embed.add_field(
         name="\U0001F517 Join the Leaderboard",
-        value=f"[Private Leaderboard](https://adventofcode.com/{event_year}/leaderboard/private/view/{AOC_LEADERBOARD_ID})",
+        value=f"**Code:** `4312390-e0e2e1f4`\n[View Leaderboard](https://adventofcode.com/2025/leaderboard/private/view/4312390?view_key=39391480)",
         inline=False
     )
 
